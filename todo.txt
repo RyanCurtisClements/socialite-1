@@ -1,0 +1,14 @@
+1.0 version
+===========
+sign on screen (form)
+feed of posts
+new post page
+signout button
+* all pages redirect to signon
+
+[x] user account model
+[x] post model
+[x] sign on screen file
+[ ] feed screen file
+[ ] new post screen file
+[ ] enforce unique usernames
