@@ -1,0 +1,26 @@
+{
+  "name": "socialite-1",
+  "version": "1.0.0",
+  "description": "a social media website",
+  "main": "server.js",
+  "dependencies": {
+    "cookies": "^0.7.3",
+    "express": "^4.16.4",
+    "mysql": "^2.16.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RyanCurtisClements/socialite-1.git"
+  },
+  "author": "cal tissue / ryan clements",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RyanCurtisClements/socialite-1/issues"
+  },
+  "homepage": "https://github.com/RyanCurtisClements/socialite-1#readme"
+}

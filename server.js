@@ -8,17 +8,13 @@ var url = require('url')
 var con = mysql.createConnection({
 	host: 'localhost',
 	user: 'node',
-	password: 'nodepassword'
+	password: 'nodepassword',
+	database: 'socialite'
 })
 
 con.connect(function(err){
 	if (err) throw err;
-	console.log('MYSQL connected')
-
-	con.query('USE socialite', function(err, result){
-		if (err) throw err
-		else console.log('Using database socialite')
-	})	
+	console.log('MYSQL connected to database socialite')	
 })
 
 http.createServer(function(req, res) {
@@ -28,46 +24,61 @@ http.createServer(function(req, res) {
 	if (username) 
 	{
 		console.log('user: ' + username)
-		if (req.method == 'GET') {
-			serve_page(res, 'feed.html')
-		}
-		// get -> 
-			// feed, post page
-		// post -> 
-			// posting a post or signing out
-		if (req.method == 'POST') 
+
+		switch (req.method)
 		{
-			var q = url.parse(req.url, true)
-			if (q.path == '/signout') {
-				cookies.set('username')
-				serve_page(res, 'login.html')
+			case 'GET':
+				serve_page(res, 'feed.html')
+			break
+
+			case 'POST':
+			console.log('POST')
+
+			switch(url.parse(req.url).path)
+			{
+				case '/signout':
+					console.log('Sign Out')
+					cookies.set('username')
+					serve_page(res, 'login.html')
+				break
 			}
-		}
+			break
+		}			
 	} else 
 	{
 		console.log('no user signed in')
-
-		if (req.method == 'GET') 
+		switch (req.method)
 		{
+			case 'GET':
 			serve_page(res, 'login.html')
+			break
+			
+			case 'POST':
+				var body = ''
+				req.on('data', (data) => { body += data })	
+				var post = qs.parse(body, true)
+				console.log(post.username + ' ' + post.password)
 
-		} else if (req.method == 'POST') 
-		{
-			var body = ''
+				req.on('end', () => {
+					switch(url.parse(req.url).path)
+					{
+						case '/login':
+						begin_signon(res, post, cookies)
+					
+						break
 
-			req.on('data', function(data) { body += data })
-
-			req.on('end', function(){
-				var post = qs.parse(body)
-
-				begin_signon(res, post.username, post.password, cookies)
-			})			
+						case '/createuser':
+							insert_user(res, post)
+						break
+					}
+				})			
+			break
 		}
 	}
 }).listen(8080);
 
 function serve_page(res, page) {
-	fs.readFile(page, 'utf8', function(err, data){
+	fs.readFile(page, 'utf8', (err, data) => {
 		if (err) throw err;
 
 		res.writeHead(200, {'Content-Type':'text/html'})
@@ -77,28 +88,34 @@ function serve_page(res, page) {
 }
 
 // currently not used
-function insert_user(username, password) {
+function insert_user(res, post) {
+
+
 	con.query({
 		sql: 'INSERT INTO user (name, password) VALUES(?, ?)',
-		values: [username, password]
-	}, function(err,result){
+		values: [post.username, post.password]
+	}, (err,result) => {
 		if (err) throw err;
 		else console.log('user inserted')
+		
+		serve_page(res, 'login.html')
 	})
 }
 
-function begin_signon(res, username, password, cookies){
+function begin_signon(res, post, cookies){
+	
+
 	con.query({
 		sql: 'SELECT password FROM user WHERE name = ?',
-		values: [username]
+		values: [post.username]
 	}, function(err, result) {
 		if (err) throw err;
 
 		if (result.length > 0) {
-			if(password == result[0].password) {
+			if(post.password == result[0].password) {
 				// initiate session
 				console.log('user exists, password accurate')
-				cookies.set('username', username)
+				cookies.set('username', post.username)
 				serve_page(res, 'feed.html')
 			}
 			else {
@@ -110,7 +127,7 @@ function begin_signon(res, username, password, cookies){
 		else {
 			// initiate invalid user redirect
 			console.log('user does not exist')
-			serve_page(res, 'login.html')
+			serve_page(res, 'user.html')
 		}
 	})
 }
